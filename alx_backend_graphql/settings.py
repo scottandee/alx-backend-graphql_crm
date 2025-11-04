@@ -27,8 +27,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'crm',
-    'graphene_django'
+    'graphene_django',
+    'rest_framework',
 ]
+
+GRAPHENE = {
+    "SCHEMA": "alx_backend_graphql.schema.schema"
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
