@@ -12,6 +12,9 @@ delete_count, _ = qs.delete()
 print(delete_count)
 "
 
+# Execute delete query and store number of deleted customers
 count=$(/home/scott/alx/alx_pdbe/graphql/bin/python3 manage.py shell -c "$command")
+
+# Log number of customers deleted with timestamp
 echo \"$(date +"%Y%m%d_%H%M%S"): $count Customers Deleted\" >>  /tmp/customer_cleanup_log.txt
 
