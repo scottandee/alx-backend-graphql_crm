@@ -1,0 +1,1 @@
+* * * 0 * /usr/bin/bash /home/scott/alx/alx_pdbe/alx-backend-graphql_crm/crm/cron_jobs/clean_inactive_customers.sh 
