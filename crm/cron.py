@@ -1,6 +1,6 @@
 from datetime import datetime
 from gql import Client, gql
-from gql.transport.aiohttp import AIOHTTPTransport
+from gql.transport.requests import RequestsHTTPTransport
 
 
 def log_crm_heartbeat():
@@ -9,7 +9,7 @@ def log_crm_heartbeat():
     It monitors the crm app and logs its status
     """
     # Establish connection to graphql endpoint
-    transport = AIOHTTPTransport("http://localhost:8000/graphql")
+    transport = RequestsHTTPTransport(url="http://localhost:8000/graphql")
     client = Client(transport=transport)
 
     # Define and execute query
