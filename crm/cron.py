@@ -95,7 +95,3 @@ def update_low_stock():
 
     print('Low product stock updated!')
 
-
-if __name__ == "__main__":
-    log_crm_heartbeat()
-    update_low_stock()
