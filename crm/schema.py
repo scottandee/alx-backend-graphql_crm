@@ -1,6 +1,6 @@
 import graphene
 from django.db import transaction
-from django.db.models import F
+from django.db.models import Sum
 from graphql import GraphQLError
 from graphene_django.types import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
@@ -39,6 +39,12 @@ class OrderType(DjangoObjectType):
         ]
         filterset_class = OrderFilter
         interfaces = (graphene.relay.Node,)
+
+
+class StatsType(graphene.ObjectType):
+    total_customers = graphene.Int()
+    total_orders = graphene.Int()
+    total_revenue = graphene.Decimal()
 
 
 # =============================================
@@ -213,6 +219,23 @@ class Query(graphene.ObjectType):
 
     order = relay.Node.Field(OrderNode)
     all_orders = DjangoFilterConnectionField(OrderNode)
+
+    stats = graphene.Field(StatsType)
+
+    def resolve_stats(self, info):
+        total_customers = Customer.objects.count()
+        total_orders = Order.objects.count()
+        total_revenue = (
+            Order.objects
+            .values('products__price')
+            .aggregate(total=Sum('products__price'))
+        )['total'] or 0
+
+        return StatsType(
+            total_customers=total_customers,
+            total_orders=total_orders,
+            total_revenue=total_revenue,
+        )
 
 
 class Mutation(graphene.ObjectType):
