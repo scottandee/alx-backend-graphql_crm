@@ -11,6 +11,9 @@ from datetime import datetime, timedelta
 import base64
 
 
+PATH_TO_LOG_FILE = "/tmp/order_reminders_log.txt"
+
+
 def decode_relay_id(encoded_id):
     """
     This function decodes a base64 encoded string
@@ -57,9 +60,9 @@ def fetch_orders():
         # Execute query
         response = client.execute(query, variable_values=variable)
     except Exception as e:
-        print(f"GraphQL query failed: {e}")
-        response = {}
-
+        with open(PATH_TO_LOG_FILE, 'a', encoding="utf-8") as f:
+            f.write(f"GraphQL query failed: {e}")
+        orders = {}
     orders = response.get("allOrders", {}).get("edges", [])
     return orders
 
@@ -76,14 +79,9 @@ def log_pending_orders(orders):
     This script logs the the email and id of each order
     into the reminders log file
     """
-    path_to_log_file = "/tmp/order_reminders_log.txt"
 
-    if not orders:
-        with open(path_to_log_file, 'a', encoding="utf-8") as f:
-            current_time = get_formatted_current_datetime()
-            f.write(f"{current_time}: No pending orders!\n")
-    else:
-        with open(path_to_log_file, 'a', encoding="utf-8") as f:
+    if orders:
+        with open(PATH_TO_LOG_FILE, 'a', encoding="utf-8") as f:
             for edge in orders:
                 node = edge.get("node")
                 order_id = decode_relay_id(node.get("id"))
@@ -91,6 +89,7 @@ def log_pending_orders(orders):
                 if order_id:
                     current_time = get_formatted_current_datetime()
                     f.write(f"{current_time} - id={order_id} email={email}\n")
+
     print("Order reminders processed!")
 
 
