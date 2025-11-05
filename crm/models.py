@@ -26,9 +26,12 @@ class Product(models.Model):
 
 
 class Order(models.Model):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(
+        Customer,
+        related_name='orders',
+        on_delete=models.CASCADE)
     products = models.ManyToManyField(Product, related_name='orders')
-    order_date = models.DateField(auto_now_add=True)
+    order_date = models.DateField()
 
     @property
     def total_amount(self):

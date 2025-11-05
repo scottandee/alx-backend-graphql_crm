@@ -6,22 +6,21 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene import relay
 from .models import Customer, Product, Order
 from .serializer import OrderSerializers, ProductSerializer, CustomerSerializer
-from .filters import ProductFilter, CustomerFilter, OrderFilter, FilteredConnectionField
+from .filters import ProductFilter, CustomerFilter, OrderFilter
 import json
 
 
+# =====================================
+# Types
+# =====================================
 class CustomerType(DjangoObjectType):
     class Meta:
         model = Customer
-        filterset_class = CustomerFilter
-        interfaces = (relay.Node, )
 
 
 class ProductType(DjangoObjectType):
     class Meta:
         model = Product
-        filterset_class = ProductFilter
-        interfaces = (relay.Node, )
 
 
 class OrderType(DjangoObjectType):
@@ -37,9 +36,12 @@ class OrderType(DjangoObjectType):
             "total_amount",
         ]
         filterset_class = OrderFilter
-        interfaces = (relay.Node, )
+        interfaces = (graphene.relay.Node,)
 
 
+# =============================================
+# Inputs to Mutation
+# =============================================
 class CustomerInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     email = graphene.String(required=True)
@@ -58,74 +60,9 @@ class OrderInput(graphene.InputObjectType):
     order_date = graphene.Date()
 
 
-class CustomerFilterInput(graphene.InputObjectType):
-    """
-    GraphQL filter input for the Customer model.
-    Supports case-insensitive text search and date-based filtering.
-    """
-    name_icontains = graphene.String(
-        description="Filter customers whose name contains this value (case-insensitive)"
-    )
-    email_icontains = graphene.String(
-        description="Filter customers whose email contains this value (case-insensitive)"
-    )
-    phone_icontains = graphene.String(
-        description="Filter customers whose phone number contains this value"
-    )
-    created_at_gte = graphene.Date(
-        description="Filter customers created on or after this date"
-    )
-    created_at_lte = graphene.Date(
-        description="Filter customers created on or before this date"
-    )
-
-
-class ProductFilterInput(graphene.InputObjectType):
-    """
-    GraphQL filter input for the Product model.
-    Supports text search and numeric comparisons for price and stock.
-    """
-    name_icontains = graphene.String(
-        description="Filter products whose name contains this value (case-insensitive)"
-    )
-    price_gte = graphene.Decimal(
-        description="Filter products with price greater than or equal to this value"
-    )
-    price_lte = graphene.Decimal(
-        description="Filter products with price less than or equal to this value"
-    )
-    stock_gte = graphene.Int(
-        description="Filter products with stock greater than or equal to this value"
-    )
-    stock_lte = graphene.Int(
-        description="Filter products with stock less than or equal to this value"
-    )
-
-
-class OrderFilterInput(graphene.InputObjectType):
-    """
-    GraphQL filter input for the Order model.
-    Includes date filters and nested filters for related models.
-    """
-    order_date_gte = graphene.Date(
-        description="Filter orders placed on or after this date"
-    )
-    order_date_lte = graphene.Date(
-        description="Filter orders placed on or before this date"
-    )
-
-    # Nested filters
-    customer = graphene.Argument(
-        CustomerFilterInput,
-        description="Nested filter for related customer fields"
-    )
-    product = graphene.Argument(
-        ProductFilterInput,
-        description="Nested filter for related product fields"
-    )
-
-
-
+# ===============================================
+# Mutatation Classes
+# ================================================
 class CreateCustomer(graphene.Mutation):
     """
     Create Customer Mutation
@@ -221,38 +158,42 @@ class CreateOrder(graphene.Mutation):
         return CreateOrder(order=order)
 
 
-class OrderByEnum(graphene.Enum):
-    NAME_ASC = "name"
-    NAME_DESC = "-name"
-    PRICE_ASC = "price"
-    PRICE_DESC = "-price"
-    ORDER_DATE_ASC = "order_date"
-    ORDER_DATE_DESC = "-order_date"
+# ==============================================
+# Query Nodes
+# ===============================================
+class CustomerNode(DjangoObjectType):
+    class Meta:
+        model = Customer
+        filterset_class = CustomerFilter
+        interfaces = (graphene.relay.Node,)
 
 
+class ProductNode(DjangoObjectType):
+    class Meta:
+        model = Product
+        filterset_class = ProductFilter
+        interfaces = (graphene.relay.Node,)
+
+
+class OrderNode(DjangoObjectType):
+    class Meta:
+        model = Order
+        filterset_class = OrderFilter
+        interfaces = (graphene.relay.Node,)
+
+
+# =============================================
+# Query & Mutation Object Types
+# ==============================================
 class Query(graphene.ObjectType):
-    all_customers = FilteredConnectionField(CustomerType, filterset_class=CustomerFilter)
-    all_products = FilteredConnectionField(ProductType, filterset_class=ProductFilter)
-    all_orders = FilteredConnectionField(OrderType, filterset_class=OrderFilter)
+    customer = relay.Node.Field(CustomerNode)
+    all_customers = DjangoFilterConnectionField(CustomerNode)
 
-    def resolve_all_customers(self, info, order_by=None, **kwargs):
-        qs = Customer.objects.all()
-        if order_by:
-            qs = qs.order_by(order_by.value)
-        return qs
+    product = relay.Node.Field(ProductNode)
+    all_products = DjangoFilterConnectionField(ProductNode)
 
-    def resolve_all_products(self, info, order_by=None, **kwargs):
-        qs = Product.objects.all()
-        if order_by:
-            qs = qs.order_by(order_by.value)
-        return qs
-
-    def resolve_all_orders(self, info, order_by=None, **kwargs):
-        qs = Order.objects.all()
-        if order_by:
-            qs = qs.order_by(order_by.value)
-        return qs
-
+    order = relay.Node.Field(OrderType)
+    all_orders = DjangoFilterConnectionField(OrderType)
 
 
 class Mutation(graphene.ObjectType):
