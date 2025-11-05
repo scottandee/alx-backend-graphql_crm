@@ -1,5 +1,6 @@
 import graphene
 from django.db import transaction
+from django.db.models import F
 from graphql import GraphQLError
 from graphene_django.types import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
@@ -158,6 +159,23 @@ class CreateOrder(graphene.Mutation):
         return CreateOrder(order=order)
 
 
+class UpdateLowStockProducts(graphene.Mutation):
+    """
+    Update Low Stock Products Mutaton
+    """
+    products = graphene.List(ProductType)
+    message = graphene.String()
+
+    def mutate(self, info):
+        products = Product.objects.filter(stock__lt=10)
+        for p in products:
+            p.stock = p.stock + 10
+        Product.objects.bulk_update(products, ['stock'])
+
+        return UpdateLowStockProducts(
+            products=products, message='Low stocks updated successfully!')
+
+
 # ==============================================
 # Query Nodes
 # ===============================================
@@ -192,8 +210,8 @@ class Query(graphene.ObjectType):
     product = relay.Node.Field(ProductNode)
     all_products = DjangoFilterConnectionField(ProductNode)
 
-    order = relay.Node.Field(OrderType)
-    all_orders = DjangoFilterConnectionField(OrderType)
+    order = relay.Node.Field(OrderNode)
+    all_orders = DjangoFilterConnectionField(OrderNode)
 
 
 class Mutation(graphene.ObjectType):
@@ -201,3 +219,4 @@ class Mutation(graphene.ObjectType):
     bulk_create_customers = BulkCreateCustomers.Field()
     create_product = CreateProduct.Field()
     create_order = CreateOrder.Field()
+    update_low_stock_products = UpdateLowStockProducts.Field()
