@@ -5,7 +5,8 @@ from graphql import GraphQLError
 from graphene_django.types import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene import relay
-from .models import Customer, Product, Order
+from .models import Customer, Order
+from crm.models import Product
 from .serializer import OrderSerializers, ProductSerializer, CustomerSerializer
 from .filters import ProductFilter, CustomerFilter, OrderFilter
 import json
