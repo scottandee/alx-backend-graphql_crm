@@ -54,7 +54,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULE = {
     'generate-crm-report': {
         'task': 'crm.tasks.generate_crm_report',
-        'schedule': 60.0,
+        'schedule': crontab(day_of_week='mon', hour=6, minute=0),
     },
 }
 
